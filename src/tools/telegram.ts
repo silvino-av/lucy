@@ -1,28 +1,58 @@
-export async function sendTelegramMessage(chatId: number, text: string) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  if (!token) {
-    console.error("TELEGRAM_BOT_TOKEN is not set.");
+import { Telegraf } from "telegraf";
+import { supervisorAgent } from "../agents/supervisor";
+import { HumanMessage } from "@langchain/core/messages";
+import "dotenv/config";
+
+const token = process.env.TELEGRAM_BOT_TOKEN;
+const allowedChatId = process.env.TELEGRAM_ALLOWED_CHAT_ID?.trim();
+
+if (!token) {
+  console.error("⚠️ TELEGRAM_BOT_TOKEN is missing in .env");
+}
+
+export const bot = new Telegraf(token || "dummy-token");
+
+bot.on("text", async (ctx) => {
+  const chatId = ctx.chat.id.toString();
+  
+  // Security Check: Only process messages from the allowed Chat ID
+  if (allowedChatId && chatId !== allowedChatId) {
+    console.warn(`[Seguridad] Intento de acceso no autorizado del Chat ID: ${chatId}`);
     return;
+  } else if (!allowedChatId) {
+    console.warn(`⚠️ No has configurado TELEGRAM_ALLOWED_CHAT_ID en tu .env. Tu Chat ID actual es: ${chatId}. Configúralo para poder chatear.`);
+    return; // Bloquea estrictamente si no está configurado
   }
 
-  const url = `https://api.telegram.org/bot${token}/sendMessage`;
-  
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: text,
-      }),
-    });
+  const text = ctx.message.text;
 
-    if (!response.ok) {
-      console.error("Failed to send message to Telegram:", await response.text());
+  try {
+    // Show "typing..." indicator in Telegram
+    await ctx.sendChatAction("typing");
+
+    // Invoke the LangGraph Agent with the chat ID as the thread ID for memory
+    const result = await supervisorAgent.invoke(
+      { messages: [new HumanMessage(text)] },
+      { configurable: { thread_id: chatId } }
+    );
+
+    // Extract the final response
+    const finalMessage = result.messages[result.messages.length - 1];
+    if (finalMessage && finalMessage.content) {
+      let responseText = finalMessage.content as string;
+      
+      // Fix markdown formatting for Telegram (Telegram uses * for bold, LLMs use **)
+      responseText = responseText.replace(/\*\*/g, '*');
+
+      try {
+        await ctx.reply(responseText, { parse_mode: 'Markdown' });
+      } catch (parseError) {
+        console.warn("Markdown parse failed, sending raw text instead...");
+        await ctx.reply(responseText); // Fallback sin formato
+      }
     }
   } catch (error) {
-    console.error("Error sending message to Telegram:", error);
+    console.error("Error processing telegram message:", error);
+    await ctx.reply("Perdón, tuve un problema procesando tu mensaje.");
   }
-}
+});
