@@ -1,0 +1,17 @@
+
+services:
+  lucy-db:
+    image: postgres:15-alpine
+    container_name: lucy_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: usuario
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: lucy_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - lucy_pgdata:/var/lib/postgresql/data
+
+volumes:
+  lucy_pgdata:
