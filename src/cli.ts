@@ -32,7 +32,7 @@ async function startCLI() {
       try {
         // Enviar mensaje al agente Supervisor de LangGraph
         const result = await supervisorAgent.invoke(
-          { messages: [new HumanMessage(input)] },
+          { messages: [new HumanMessage(input)], channel: "terminal" },
           { configurable: { thread_id: threadId } }
         );
 

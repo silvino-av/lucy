@@ -32,7 +32,7 @@ bot.on("text", async (ctx) => {
 
     // Invoke the LangGraph Agent with the chat ID as the thread ID for memory
     const result = await supervisorAgent.invoke(
-      { messages: [new HumanMessage(text)] },
+      { messages: [new HumanMessage(text)], channel: "telegram" },
       { configurable: { thread_id: chatId } }
     );
 
