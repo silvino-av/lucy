@@ -1,6 +1,5 @@
 import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
 import { Pool } from "pg";
-import "dotenv/config";
 
 // Create a Postgres connection pool
 // IMPORTANT: Make sure to set DATABASE_URL in your .env file

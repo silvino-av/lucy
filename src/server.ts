@@ -17,15 +17,15 @@ setupMemory()
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
 
-const app = new Hono();
+// const app = new Hono();
 
-// Health check endpoint
-app.get("/", (c) => {
-  return c.text("Lucy Super Agent API & Bot are running!");
-});
+// // Health check endpoint
+// app.get("/", (c) => {
+//   return c.text("Lucy Super Agent API & Bot are running!");
+// });
 
-// Start the server using Bun's native HTTP server
-export default {
-  port: process.env.PORT || 3000,
-  fetch: app.fetch,
-};
+// // Start the server using Bun's native HTTP server
+// export default {
+//   port: process.env.PORT || 3000,
+//   fetch: app.fetch,
+// };

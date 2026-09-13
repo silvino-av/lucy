@@ -2,7 +2,6 @@ import { setupMemory } from "./memory/checkpoint";
 import { supervisorAgent } from "./agents/supervisor";
 import { HumanMessage } from "@langchain/core/messages";
 import * as readline from "readline";
-import "dotenv/config";
 
 const rl = readline.createInterface({
   input: process.stdin,

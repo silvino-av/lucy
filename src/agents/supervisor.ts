@@ -1,8 +1,6 @@
 import { ChatOllama } from "@langchain/ollama";
 import {
   StateGraph,
-  StateSchema,
-  MessagesValue,
   START,
   END,
   type GraphNode,
@@ -10,30 +8,46 @@ import {
 } from "@langchain/langgraph";
 import { SystemMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
 import { checkpointer } from "../memory/checkpoint";
+import { tool } from "@langchain/core/tools";
+import { z } from "zod";
 
-// Import Tools
+import { SupervisorState } from "./state";
+
+import { HumanMessage } from "@langchain/core/messages";
+
+// Import Sub-Agents & Tools
 import { getCurrentTimeTool } from "../tools/time";
+import { devopsAgent } from "./devopsAgent";
 
-const tools = [getCurrentTimeTool];
+// Handoff Tool (Agent as a Tool)
+const askDevopsExpert = tool(
+  async ({ instruction }) => {
+    console.log(`\n[Supervisor] 📡 Consultando a DevOps: "${instruction}"...`);
+    
+    // Invocamos al sub-agente DevOps de manera aislada (sin contaminar la memoria principal)
+    const result = await devopsAgent.invoke({
+      messages: [new HumanMessage(instruction)],
+      channel: "terminal" // Puede ser terminal o telegram, no afecta tanto a DevOps
+    });
+    
+    const finalMsg = result.messages.at(-1);
+    return finalMsg ? finalMsg.content.toString() : "No hubo respuesta de DevOps.";
+  },
+  {
+    name: "ask_devops_expert",
+    description: "Útil para pedirle al experto DevOps que revise infraestructura, discos, RAM o ejecute comandos en el servidor. Pásale una instrucción clara de lo que necesitas saber.",
+    schema: z.object({
+      instruction: z.string().describe("Instrucciones detalladas de lo que el experto DevOps debe investigar o hacer.")
+    })
+  }
+);
 
-import { Annotation, messagesStateReducer } from "@langchain/langgraph";
-import { BaseMessage } from "@langchain/core/messages";
-
-// Define the state for the supervisor graph
-export const SupervisorState = Annotation.Root({
-  messages: Annotation<BaseMessage[]>({
-    reducer: messagesStateReducer,
-    default: () => [],
-  }),
-  channel: Annotation<string>({
-    reducer: (left?: string, right?: string) => right ?? left ?? "terminal",
-    default: () => "terminal",
-  })
-});
+const tools = [getCurrentTimeTool, askDevopsExpert];
 
 // Model Configuration
 const model = new ChatOllama({
-  model: process.env.OLLAMA_MODEL || "gemma4:cloud", 
+  model: process.env.OLLAMA_MODEL || "gemma4:cloud",
+  verbose: true,
   temperature: 0,
 });
 
@@ -42,16 +56,18 @@ const modelWithTools = model.bindTools(tools);
 
 // Supervisor Node (LLM Call)
 const supervisorNode: GraphNode<typeof SupervisorState> = async (state) => {
+  console.log("🤖 [LangGraph] Supervisor analizando la petición...");
+
   const channelContext = state.channel === "telegram"
     ? "Contexto de comunicación: Actualmente estás respondiendo a través de TELEGRAM. Usa formato amigable para móviles, puedes usar emojis, y asegúrate de usar Markdown simple (un solo asterisco * para negritas, NUNCA uses doble asterisco **)."
     : "Contexto de comunicación: Actualmente estás respondiendo a través de la TERMINAL DE COMANDOS (CLI). Tu formato debe ser muy limpio, tipo consola de Linux. Usa listas simples sin Markdown complejo y mantén las respuestas directas.";
 
   const systemPrompt = new SystemMessage(
-    "Eres Lucy, una Inteligencia Artificial avanzada que actúa como asistente personal " +
-    "y orquestadora de sistemas para Silvino.\n\n" +
+    "Eres Lucy, una Inteligencia Artificial avanzada que actúa como orquestadora principal para Silvino.\n\n" +
     `${channelContext}\n\n` +
-    "SIEMPRE que el usuario pregunte por la fecha, la hora, o 'qué día es', usa la " +
-    "herramienta proporcionada para averiguarlo antes de responder."
+    "SIEMPRE que el usuario pregunte por la fecha, usa la herramienta correspondiente.\n" +
+    "Si el usuario pide información técnica del servidor (almacenamiento, uptime, etc.), " +
+    "USA LA HERRAMIENTA 'ask_devops_expert' para preguntarle al experto. Luego, resume su reporte para Silvino de forma amigable."
   );
 
   const response = await modelWithTools.invoke([systemPrompt, ...state.messages]);
@@ -70,7 +86,7 @@ const toolNode: GraphNode<typeof SupervisorState> = async (state) => {
   for (const toolCall of lastMessage.tool_calls) {
     const tool = tools.find((t) => t.name === toolCall.name);
     if (tool) {
-      const observation = await tool.invoke(toolCall);
+      const observation = await (tool as any).invoke(toolCall);
       result.push(observation);
     }
   }

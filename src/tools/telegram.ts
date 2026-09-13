@@ -1,7 +1,6 @@
 import { Telegraf } from "telegraf";
 import { supervisorAgent } from "../agents/supervisor";
 import { HumanMessage } from "@langchain/core/messages";
-import "dotenv/config";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const allowedChatId = process.env.TELEGRAM_ALLOWED_CHAT_ID?.trim();
@@ -10,7 +9,10 @@ if (!token) {
   console.error("⚠️ TELEGRAM_BOT_TOKEN is missing in .env");
 }
 
-export const bot = new Telegraf(token || "dummy-token");
+// Increase handlerTimeout because local "Thinking" models can take more than 90 seconds
+export const bot = new Telegraf(token || "dummy-token", {
+  handlerTimeout: 9_000_000,
+});
 
 bot.on("text", async (ctx) => {
   const chatId = ctx.chat.id.toString();
