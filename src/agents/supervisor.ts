@@ -59,9 +59,14 @@ const modelWithTools = model.bindTools(tools);
 const supervisorNode: GraphNode<typeof SupervisorState> = async (state) => {
   console.log("🤖 [LangGraph] Supervisor analizando la petición...");
 
-  const channelContext = state.channel === "telegram"
-    ? "Contexto de comunicación: Actualmente estás respondiendo a través de TELEGRAM. Usa formato amigable para móviles, puedes usar emojis, y asegúrate de usar Markdown simple (un solo asterisco * para negritas, NUNCA uses doble asterisco **)."
-    : "Contexto de comunicación: Actualmente estás respondiendo a través de la TERMINAL DE COMANDOS (CLI). Tu formato debe ser muy limpio, tipo consola de Linux. Usa listas simples sin Markdown complejo y mantén las respuestas directas.";
+  let channelContext = "";
+  if (state.channel === "telegram") {
+    channelContext = "Contexto de comunicación: Actualmente estás respondiendo a través de TELEGRAM. Usa formato amigable para móviles, puedes usar emojis, y asegúrate de usar Markdown simple (un solo asterisco * para negritas, NUNCA uses doble asterisco **).";
+  } else if (state.channel === "mobile") {
+    channelContext = "Contexto de comunicación: Actualmente estás respondiendo a través de una APP MÓVIL NATIVA (React Native). Usa formato súper amigable, cercano y moderno, puedes usar emojis, y asegúrate de usar Markdown simple.";
+  } else {
+    channelContext = "Contexto de comunicación: Actualmente estás respondiendo a través de la TERMINAL DE COMANDOS (CLI). Tu formato debe ser muy limpio, tipo consola de Linux. Usa listas simples sin Markdown complejo y mantén las respuestas directas.";
+  }
 
   const systemPrompt = new SystemMessage(
     "Eres Lucy, una Inteligencia Artificial avanzada que actúa como orquestadora principal para Silvino.\n\n" +
