@@ -61,9 +61,13 @@ const supervisorNode: GraphNode<typeof SupervisorState> = async (state) => {
 
   let channelContext = "";
   if (state.channel === "telegram") {
-    channelContext = "Contexto de comunicación: Actualmente estás respondiendo a través de TELEGRAM. Usa formato amigable para móviles, puedes usar emojis, y asegúrate de usar Markdown simple (un solo asterisco * para negritas, NUNCA uses doble asterisco **).";
+    channelContext = "Contexto de comunicación: Actualmente estás respondiendo a través de TELEGRAM por mensaje de texto. Usa formato amigable para móviles, puedes usar emojis, y asegúrate de usar Markdown simple (un solo asterisco * para negritas, NUNCA uses doble asterisco **).";
+  } else if (state.channel === "telegram_audio") {
+    channelContext = "Contexto de comunicación: Actualmente estás respondiendo a través de una NOTA DE VOZ (AUDIO) en Telegram. Es CRÍTICO que generes texto PLANO. NO uses emojis, NO uses Markdown, NO uses caracteres especiales ni listas largas. Habla de forma natural, conversacional y fluida como si estuvieras en una llamada telefónica.";
   } else if (state.channel === "mobile") {
     channelContext = "Contexto de comunicación: Actualmente estás respondiendo a través de una APP MÓVIL NATIVA (React Native). Usa formato súper amigable, cercano y moderno, puedes usar emojis, y asegúrate de usar Markdown simple.";
+  } else if (state.channel === "mobile_audio") {
+    channelContext = "Contexto de comunicación: Actualmente estás respondiendo a través de VOZ en la APP MÓVIL. Es CRÍTICO que generes texto PLANO. NO uses emojis, NO uses Markdown, NO uses caracteres especiales ni listas largas. Habla de forma natural, conversacional y fluida como si estuvieras en una llamada telefónica.";
   } else {
     channelContext = "Contexto de comunicación: Actualmente estás respondiendo a través de la TERMINAL DE COMANDOS (CLI). Tu formato debe ser muy limpio, tipo consola de Linux. Usa listas simples sin Markdown complejo y mantén las respuestas directas.";
   }

@@ -9,7 +9,7 @@ setupMemory()
   .then(() => {
     // Once memory is ready, start polling for Telegram messages
     if (process.env.TELEGRAM_BOT_TOKEN) {
-      bot.launch();
+      bot.launch({ dropPendingUpdates: true });
       console.log("✅ Telegram Bot polling started.");
     }
   })
@@ -18,6 +18,7 @@ setupMemory()
 // Enable graceful stop for Telegram bot
 import { HumanMessage } from "@langchain/core/messages";
 import { supervisorAgent } from "./agents/supervisor";
+import { AudioService } from "./services/audio";
 
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
@@ -54,6 +55,68 @@ app.post("/api/chat", async (c) => {
     return c.json({ response: responseText });
   } catch (error: any) {
     console.error("❌ Error en POST /api/chat:", error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Audio Chat endpoint for Mobile App
+app.post("/api/chat/audio", async (c) => {
+  try {
+    const formData = await c.req.parseBody();
+    const audioFile = formData["audio"];
+    const threadId = (formData["thread_id"] as string) || "mobile-default-user";
+
+    if (!audioFile || typeof audioFile === 'string') {
+      return c.json({ error: "No audio file provided" }, 400);
+    }
+
+    const arrayBuffer = await (audioFile as File).arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // 1. Transcribe (STT)
+    const transcription = await AudioService.transcribe(buffer);
+    
+    // 2. Invoke LangGraph (usando mobile_audio para texto plano conversacional)
+    const result = await supervisorAgent.invoke(
+      { messages: [new HumanMessage(transcription)], channel: "mobile_audio" },
+      { configurable: { thread_id: threadId } }
+    );
+
+    const finalMessage = result.messages[result.messages.length - 1];
+    let responseText = "No pude procesar tu mensaje.";
+    let audioBase64 = "";
+
+    if (finalMessage && finalMessage.content) {
+      responseText = finalMessage.content.toString();
+      
+      // 3. Generate voice (TTS)
+      const audioBuffer = await AudioService.speak(responseText);
+      audioBase64 = audioBuffer.toString("base64");
+    }
+
+    return c.json({ 
+      response: responseText, 
+      transcription: transcription,
+      audioBase64: audioBase64 
+    });
+  } catch (error: any) {
+    console.error("❌ Error en POST /api/chat/audio:", error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// TTS on-demand endpoint for Mobile App
+app.post("/api/tts", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { text } = body;
+    if (!text || typeof text !== 'string') {
+      return c.json({ error: "No text provided" }, 400);
+    }
+    const audioBuffer = await AudioService.speak(text);
+    return c.json({ audioBase64: audioBuffer.toString("base64") });
+  } catch (error: any) {
+    console.error("❌ Error en POST /api/tts:", error);
     return c.json({ error: error.message }, 500);
   }
 });
