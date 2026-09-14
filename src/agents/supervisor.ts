@@ -18,6 +18,7 @@ import { HumanMessage } from "@langchain/core/messages";
 // Import Sub-Agents & Tools
 import { getCurrentTimeTool } from "../tools/time";
 import { devopsAgent } from "./devopsAgent";
+import { saveMemoryTool, searchMemoryTool } from "../memory/vector";
 
 // Handoff Tool (Agent as a Tool)
 const askDevopsExpert = tool(
@@ -42,7 +43,7 @@ const askDevopsExpert = tool(
   }
 );
 
-const tools = [getCurrentTimeTool, askDevopsExpert];
+const tools = [getCurrentTimeTool, askDevopsExpert, saveMemoryTool, searchMemoryTool];
 
 // Model Configuration
 const model = new ChatOllama({
@@ -67,7 +68,8 @@ const supervisorNode: GraphNode<typeof SupervisorState> = async (state) => {
     `${channelContext}\n\n` +
     "SIEMPRE que el usuario pregunte por la fecha, usa la herramienta correspondiente.\n" +
     "Si el usuario pide información técnica del servidor (almacenamiento, uptime, etc.), " +
-    "USA LA HERRAMIENTA 'ask_devops_expert' para preguntarle al experto. Luego, resume su reporte para Silvino de forma amigable."
+    "USA LA HERRAMIENTA 'ask_devops_expert' para preguntarle al experto.\n" +
+    "Tienes memoria a largo plazo: Usa 'save_memory' para guardar hechos importantes, y 'search_memory' para recordar el pasado."
   );
 
   const response = await modelWithTools.invoke([systemPrompt, ...state.messages]);

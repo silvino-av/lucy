@@ -1,9 +1,11 @@
 import { Hono } from "hono";
 import { setupMemory } from "./memory/checkpoint";
+import { setupVectorStore } from "./memory/vector";
 import { bot } from "./tools/telegram";
 
-// Initialize memory (tables) before accepting requests
+// Initialize memory and vector store before accepting requests
 setupMemory()
+  .then(() => setupVectorStore())
   .then(() => {
     // Once memory is ready, start polling for Telegram messages
     if (process.env.TELEGRAM_BOT_TOKEN) {
