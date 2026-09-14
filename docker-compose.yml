@@ -13,5 +13,12 @@ services:
     volumes:
       - lucy_pgdata:/var/lib/postgresql/data
 
+  lucy-tts:
+    image: ghcr.io/remsky/kokoro-fastapi-cpu:latest
+    container_name: kokoro-tts
+    restart: always
+    ports:
+      - "8880:8880"
+
 volumes:
   lucy_pgdata:

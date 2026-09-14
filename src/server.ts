@@ -9,7 +9,7 @@ setupMemory()
   .then(() => {
     // Once memory is ready, start polling for Telegram messages
     if (process.env.TELEGRAM_BOT_TOKEN) {
-      bot.launch({ dropPendingUpdates: true });
+      bot.launch();
       console.log("✅ Telegram Bot polling started.");
     }
   })

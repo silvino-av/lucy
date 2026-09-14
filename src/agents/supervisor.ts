@@ -63,18 +63,24 @@ const supervisorNode: GraphNode<typeof SupervisorState> = async (state) => {
   if (state.channel === "telegram") {
     channelContext = "Contexto de comunicación: Actualmente estás respondiendo a través de TELEGRAM por mensaje de texto. Usa formato amigable para móviles, puedes usar emojis, y asegúrate de usar Markdown simple (un solo asterisco * para negritas, NUNCA uses doble asterisco **).";
   } else if (state.channel === "telegram_audio") {
-    channelContext = "Contexto de comunicación: Actualmente estás respondiendo a través de una NOTA DE VOZ (AUDIO) en Telegram. Es CRÍTICO que generes texto PLANO. NO uses emojis, NO uses Markdown, NO uses caracteres especiales ni listas largas. Habla de forma natural, conversacional y fluida como si estuvieras en una llamada telefónica.";
+    channelContext = "Contexto de comunicación: Actualmente estás respondiendo por NOTA DE VOZ (AUDIO) en Telegram. Tu respuesta DEBE ser MUY DIRECTA, CONCISA Y BREVE (máximo 1 o 2 oraciones). Ve directo al grano sin introducciones ni rodeos. Es CRÍTICO que generes texto PLANO: NO uses emojis, NO uses Markdown (* o _), NO uses viñetas ni caracteres especiales. Habla de forma natural y concisa.";
   } else if (state.channel === "mobile") {
     channelContext = "Contexto de comunicación: Actualmente estás respondiendo a través de una APP MÓVIL NATIVA (React Native). Usa formato súper amigable, cercano y moderno, puedes usar emojis, y asegúrate de usar Markdown simple.";
   } else if (state.channel === "mobile_audio") {
-    channelContext = "Contexto de comunicación: Actualmente estás respondiendo a través de VOZ en la APP MÓVIL. Es CRÍTICO que generes texto PLANO. NO uses emojis, NO uses Markdown, NO uses caracteres especiales ni listas largas. Habla de forma natural, conversacional y fluida como si estuvieras en una llamada telefónica.";
+    channelContext = "Contexto de comunicación: Actualmente estás respondiendo por VOZ (AUDIO) en la APP MÓVIL. Tu respuesta DEBE ser MUY DIRECTA, CONCISA Y BREVE (máximo 1 o 2 oraciones). Ve directo al grano sin introducciones ni rodeos. Es CRÍTICO que generes texto PLANO: NO uses emojis, NO uses Markdown (* o _), NO uses viñetas ni caracteres especiales. Habla de forma natural y concisa.";
   } else {
     channelContext = "Contexto de comunicación: Actualmente estás respondiendo a través de la TERMINAL DE COMANDOS (CLI). Tu formato debe ser muy limpio, tipo consola de Linux. Usa listas simples sin Markdown complejo y mantén las respuestas directas.";
   }
 
+  const isAudioChannel = state.channel === "telegram_audio" || state.channel === "mobile_audio";
+  const lengthInstruction = isAudioChannel
+    ? "REGLA ESTRICTA DE VOZ: Sé sumamente concisa. Responde en máximo 1 o 2 oraciones directas. NUNCA des explicaciones largas ni introducciones de relleno en mensajes de voz."
+    : "Mantén respuestas claras y bien estructuradas.";
+
   const systemPrompt = new SystemMessage(
     "Eres Lucy, una Inteligencia Artificial avanzada que actúa como orquestadora principal para Silvino.\n\n" +
     `${channelContext}\n\n` +
+    `${lengthInstruction}\n\n` +
     "SIEMPRE que el usuario pregunte por la fecha, usa la herramienta correspondiente.\n" +
     "Si el usuario pide información técnica del servidor (almacenamiento, uptime, etc.), " +
     "USA LA HERRAMIENTA 'ask_devops_expert' para preguntarle al experto.\n" +
