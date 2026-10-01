@@ -1,13 +1,39 @@
-
 services:
+  lucy-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lucy_app
+    restart: always
+    ports:
+      - "${PORT:-3001}:${PORT:-3001}"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-usuario}:${POSTGRES_PASSWORD:-password}@lucy-db:5432/${POSTGRES_DB:-lucy_db}
+      - KOKORO_TTS_URL=http://lucy-tts:8880/v1/audio/speech
+      - KOKORO_VOICE=${KOKORO_VOICE:-ef_dora}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_ALLOWED_CHAT_ID=${TELEGRAM_ALLOWED_CHAT_ID}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-gemma4:cloud}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - PORT=${PORT:-3001}
+      - SSH_HOST=${SSH_HOST}
+      - SSH_USERNAME=${SSH_USERNAME}
+      - SSH_PASSWORD=${SSH_PASSWORD}
+      - SSH_PRIVATE_KEY_PATH=${SSH_PRIVATE_KEY_PATH}
+    depends_on:
+      - lucy-db
+      - lucy-tts
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
   lucy-db:
     image: pgvector/pgvector:pg15
     container_name: lucy_postgres
     restart: always
     environment:
-      POSTGRES_USER: usuario
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: lucy_db
+      POSTGRES_USER: ${POSTGRES_USER:-usuario}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-lucy_db}
     ports:
       - "5432:5432"
     volumes:

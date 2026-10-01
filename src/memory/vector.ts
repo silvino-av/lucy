@@ -4,9 +4,10 @@ import { PGVectorStore } from "@langchain/community/vectorstores/pgvector";
 import { OllamaEmbeddings } from "@langchain/ollama";
 import { pool } from "./checkpoint";
 
-// Configuración del modelo de Embeddings usando Ollama local
+// Configuración del modelo de Embeddings usando Ollama
 const embeddings = new OllamaEmbeddings({
   model: process.env.OLLAMA_EMBEDDING_MODEL || "nomic-embed-text",
+  baseUrl: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
 });
 
 let vectorStore: PGVectorStore | null = null;

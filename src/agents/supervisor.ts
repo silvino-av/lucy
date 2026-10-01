@@ -48,6 +48,7 @@ const tools = [getCurrentTimeTool, askDevopsExpert, saveMemoryTool, searchMemory
 // Model Configuration
 const model = new ChatOllama({
   model: process.env.OLLAMA_MODEL || "gemma4:cloud",
+  baseUrl: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
   verbose: true,
   temperature: 0,
 });

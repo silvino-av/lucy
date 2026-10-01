@@ -15,6 +15,7 @@ const devopsTools = [executeSSHCommandTool, listServersTool];
 
 const model = new ChatOllama({
   model: process.env.OLLAMA_MODEL || "gemma4:cloud", 
+  baseUrl: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
   temperature: 0,
 });
 

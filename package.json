@@ -4,6 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "start": "bun run ./src/server.ts",
     "dev": "bun --watch ./src/server.ts",
     "clear-memory": "bun run ./src/scripts/clear-memory.ts",
     "clear-vector-memory": "bun run ./src/scripts/clear-vector-memory.ts",

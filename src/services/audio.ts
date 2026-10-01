@@ -8,7 +8,7 @@ import os from 'os';
 // Configure transformers.js to cache models locally
 env.allowLocalModels = true;
 env.useBrowserCache = false;
-env.allowRemoteModels = false;
+env.allowRemoteModels = true;
 
 class AudioService {
   private static sttPipeline: any = null;
