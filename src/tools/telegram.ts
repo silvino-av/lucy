@@ -5,11 +5,14 @@ import fs from "fs/promises";
 import path from "path";
 import os from "os";
 
-const token = process.env.TELEGRAM_BOT_TOKEN;
-const allowedChatId = process.env.TELEGRAM_ALLOWED_CHAT_ID?.trim();
+const rawToken = process.env.TELEGRAM_BOT_TOKEN?.trim() || "";
+export const token = rawToken.replace(/^["']|["']$/g, "").trim();
 
-if (!token) {
-  console.error("⚠️ TELEGRAM_BOT_TOKEN is missing in .env");
+const rawChatId = process.env.TELEGRAM_ALLOWED_CHAT_ID?.trim() || "";
+const allowedChatId = rawChatId.replace(/^["']|["']$/g, "").trim();
+
+if (!token || token.includes("tu_token")) {
+  console.warn("⚠️ TELEGRAM_BOT_TOKEN is missing or contains placeholder in environment variables.");
 }
 
 // Increase handlerTimeout because local "Thinking" models can take more than 90 seconds

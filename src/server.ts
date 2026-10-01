@@ -1,16 +1,24 @@
 import { Hono } from "hono";
 import { setupMemory } from "./memory/checkpoint";
 import { setupVectorStore } from "./memory/vector";
-import { bot } from "./tools/telegram";
+import { bot, token } from "./tools/telegram";
 
 // Initialize memory and vector store before accepting requests
 setupMemory()
   .then(() => setupVectorStore())
   .then(() => {
-    // Once memory is ready, start polling for Telegram messages
-    if (process.env.TELEGRAM_BOT_TOKEN) {
-      bot.launch();
-      console.log("✅ Telegram Bot polling started.");
+    // Once memory is ready, start polling for Telegram messages if token is valid
+    if (token && !token.includes("tu_token") && token !== "dummy-token") {
+      bot.launch()
+        .then(() => {
+          console.log("✅ Telegram Bot polling started.");
+        })
+        .catch((err) => {
+          console.error("❌ Error al iniciar el bot de Telegram:", err.message || err);
+          console.error("👉 Revisa tu TELEGRAM_BOT_TOKEN en las variables de entorno. Debe ser el token puro sin comillas ni espacios.");
+        });
+    } else {
+      console.log("ℹ️ Telegram Bot omitido: TELEGRAM_BOT_TOKEN no configurado o tiene valor por defecto.");
     }
   })
   .catch(console.error);
