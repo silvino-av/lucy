@@ -1,0 +1,19 @@
+[
+  {
+    "id": "principal",
+    "name": "Servidor Principal",
+    "host": "saguiar.cloud",
+    "user": "silvino",
+    "port": 22,
+    "isDefault": true,
+    "description": "Servidor principal de aplicaciones y contenedores Docker"
+  },
+  {
+    "id": "db",
+    "name": "Servidor de Base de Datos",
+    "host": "192.168.1.50",
+    "user": "silvino",
+    "port": 22,
+    "description": "Servidor de base de datos PostgreSQL y respaldos"
+  }
+]

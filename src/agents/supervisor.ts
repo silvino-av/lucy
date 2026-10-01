@@ -36,9 +36,9 @@ const askDevopsExpert = tool(
   },
   {
     name: "ask_devops_expert",
-    description: "Útil para pedirle al experto DevOps que revise infraestructura, discos, RAM o ejecute comandos en el servidor. Pásale una instrucción clara de lo que necesitas saber.",
+    description: "Útil para pedirle al experto DevOps que revise infraestructura, discos, RAM, contenedores Docker o ejecute comandos en los servidores de Silvino (soporta múltiples servidores como principal, db, etc., o listar qué servidores hay). Pásale una instrucción clara.",
     schema: z.object({
-      instruction: z.string().describe("Instrucciones detalladas de lo que el experto DevOps debe investigar o hacer.")
+      instruction: z.string().describe("Instrucciones detalladas de lo que el experto DevOps debe investigar o hacer, incluyendo el servidor si se especifica.")
     })
   }
 );
