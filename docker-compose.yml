@@ -21,8 +21,10 @@ services:
       - SSH_PASSWORD=${SSH_PASSWORD}
       - SSH_PRIVATE_KEY_PATH=${SSH_PRIVATE_KEY_PATH}
     depends_on:
-      - lucy-db
-      - lucy-tts
+      lucy-db:
+        condition: service_healthy
+      lucy-tts:
+        condition: service_started
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -38,6 +40,12 @@ services:
       - "5432:5432"
     volumes:
       - lucy_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-usuario} -d ${POSTGRES_DB:-lucy_db}"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
 
   lucy-tts:
     image: ghcr.io/remsky/kokoro-fastapi-cpu:latest
